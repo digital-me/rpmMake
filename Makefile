@@ -16,7 +16,9 @@ rpm_sedsubs	+=    -e "s/\#RPM_RELEASE\#/$(RPM_RELEASE)/g"
 rpm_sedsubs	+=    -e "s/\#RPM_ARCH\#/$(RPM_ARCH)/g"
 rpm_sedsubs	+=    -e "s/\#RPM_PACKAGER\#/$(RPM_PACKAGER)/g"
 
-all: pre src spec dep rpm post
+.PHONY: all pre src specs dep rpm post
+
+all: pre src specs dep rpm post
 
 pre:
 	# Empty log file first
@@ -35,7 +37,7 @@ pre:
 
 src: RPM_SPEC	?= specs/main.in
 src: REMOTE_SOURCES	?= $(shell sed -n -r -e "s/^\s*Source[0-9]*:\s*(https?|ftp)(:.+)/\1\2/ p" $(RPM_SPEC) | $(rpm_sedsubs))
-src: LOCAL_SOURCES	?= $(wildcard src/$(RPM_NAME)/*)
+src: LOCAL_SOURCES	?= $(wildcard src/*)
 src:
 	echo `date` - src >> "$(LOG_FILE)"
 	echo -n "Downloading remotes sources if needed... ";
@@ -53,19 +55,19 @@ src:
 	)
 	echo "ok";
 
-spec: RPM_SPEC		?= specs/main.in
-spec: RPM_CHANGELOG	?= specs/changelog
-spec:
-	echo `date` - spec >> "$(LOG_FILE)"
+specs: RPM_SPEC		?= specs/main.in
+specs: RPM_CHANGELOG	?= specs/changelog
+specs:
+	echo `date` - specs >> "$(LOG_FILE)"
 	echo -n "Preparing changelog for the template spec file... ";
 	test -f "$(RPM_SPEC)" -a -f "$(RPM_CHANGELOG)" || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
-	cp "$(RPM_CHANGELOG)" "$(RPM_BUILD_DIR)/SPECS/changelog" >> "$(LOG_FILE)" 2>&1 || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
+	cat "$(RPM_CHANGELOG)" > "$(RPM_BUILD_DIR)/SPECS/changelog" 2>> "$(LOG_FILE)" || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
 	echo "ok";
 	echo -n "Generating the spec file from template... ";
 	cat "$(RPM_SPEC)" | $(rpm_sedsubs) > "$(RPM_BUILD_DIR)/SPECS/$(RPM_NAME)-$(RPM_VERSION).spec" 2>> "$(LOG_FILE)" || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
 	echo "ok";
 
-dep: spec
+dep: specs
 	echo `date` - dep >> "$(LOG_FILE)"
 	echo -n "Installing required build dependencies... ";
 	sudo yum-builddep -y "$(RPM_BUILD_DIR)/SPECS/$(RPM_NAME)-$(RPM_VERSION).spec" >> "$(LOG_FILE)" 2>&1 || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
