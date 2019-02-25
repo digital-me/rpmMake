@@ -25,23 +25,21 @@ all: pre src specs dep rpm post
 
 check: REMOTE_SOURCES	?= $(shell $(rpm_sedsrcs) $(RPM_SPEC) | $(rpm_sedsubs))
 check:
-	ret=0
 	echo -n "Spec file ($(RPM_SPEC))... "
 	test -f $(RPM_SPEC) && echo "present" \
-	|| { echo "missing"; ret=1; };
+	|| { echo "missing"; exit 1; };
 	echo -n "Changelog file ($(RPM_CHANGELOG))... "
 	test -f $(RPM_SPEC) && echo "present" \
-	|| { echo "missing"; ret=1; };
+	|| { echo "missing"; exit 1; };
 	$(foreach SOURCE,$(REMOTE_SOURCES), \
 		echo -n "Source file ($(notdir $(SOURCE)))... "; \
 		test -f "$(RPM_BUILD_DIR)/SOURCES/$(notdir $(SOURCE))" \
 		&& echo "present" \
 		|| { echo "remote"; \
 			wget --spider "$(SOURCE)" \
-			|| ret=1; \
+			|| exit 1; \
 		} \
 	)
-	exit $(ret)
 
 pre:
 	# Empty log file first
