@@ -76,10 +76,10 @@ def releaseBranch = 'stable'
 lazyConfig(
 	name: 		   'rpmmake',
 	env: 		   [
-		RELEASE:   false,
-		DRYRUN:    false,
-		BUILD_DIR: 'target',
-		GIT_CRED:  'bot-ci-dgm-rsa',
+		RELEASE:    false,
+		DRYRUN:     false,
+		TARGET_DIR: 'target',
+		GIT_CRED:   'bot-ci-dgm-rsa',
 	],
 	inLabels:      [ 'centos-6', 'centos-7' ],
 	onLabels:      [ default: 'linux', docker: 'docker', ],
@@ -106,15 +106,24 @@ lazyStage {
 	name = 'test'
 	onlyif = ( lazyConfig['branch'] != releaseBranch ) // Skip when releasing
 	tasks = [
-		[
-			run: {
-				def version = env.VERSION ?: gitLastTag()
-				def release = version ==~ /.+-.+/ ? version.split('-')[1] : '1'
-				version = version - ~/-\d+/
-				sh("make check RPM_NAME='rpmMake' RPM_VERSION='${version}' RPM_RELEASE='${release}' LOG_FILE='/dev/stdout'")
-			},
-			in: '*', on: 'docker'
-		],
+		run: {
+			def version = env.VERSION ?: gitLastTag()
+			def release = version ==~ /.+-.+/ ? version.split('-')[1] : '1'
+			version = version - ~/-\d+/
+			sh(
+"""
+make \
+RPM_NAME='rpmMake' \
+RPM_VERSION=${version} \
+RPM_RELEASE=${release} \
+RPM_TARGET_DIR=\$(pwd)/${env.TARGET_DIR} \
+RPM_DISTS_DIR=\$(pwd)/${env.TARGET_DIR}/dists/${env.LAZY_LABEL} \
+LOG_FILE=/dev/stdout
+"""
+			)
+			sh("sudo yum -y install \$(pwd)/${env.TARGET_DIR}/dists/${env.LAZY_LABEL}/*.rpm")
+		},
+		in: '*', on: 'docker',
 	]
 }
 

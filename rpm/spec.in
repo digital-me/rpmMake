@@ -9,8 +9,7 @@ Release: %{release}%{?dist}
 License: GNU GPL
 URL: http://www.phplist.org
 Group: application/internet
-#Source: https://github.com/digital-me/rpmMake/archive/#RPM_VERSION#.tar.gz
-Source: https://github.com/digital-me/rpmMake/archive/devel_bird.tar.gz
+Source: https://github.com/digital-me/rpmMake/archive/#RPM_VERSION#.tar.gz
 Packager: #RPM_PACKAGER#
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}-%{version}-root

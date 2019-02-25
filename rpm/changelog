@@ -1,2 +1,5 @@
+* Mon Feb 25 2019 Digital-Me Infra Team <infra@digital-me.nl> - 0.0.2-1
+- Now self packaging from latest tag on Github
+
 * Mon Feb 25 2019 Digital-Me Infra Team <infra@digital-me.nl> - 0.0.1-1
 - First spec to package rpmMake itself
