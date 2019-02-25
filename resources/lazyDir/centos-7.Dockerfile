@@ -57,9 +57,10 @@ ARG group=pkgmake
 # Create and allow user to install build deps
 RUN groupadd -g ${gid} ${group} \
 	&& useradd -g ${gid} -u ${uid} -d /var/lib/pkgmake ${user} \
-	&& echo -n "Defaults:${user} " > /etc/sudoers.d/pkgmake-builddep \
-	&& echo '!requiretty' >> /etc/sudoers.d/pkgmake-builddep \
-	&& echo "${user} ALL=NOPASSWD:/usr/bin/yum-builddep *" >> /etc/sudoers.d/pkgmake-builddep
+	&& echo -n "Defaults:${user} " > /etc/sudoers.d/pkgmake-yum \
+	&& echo '!requiretty' >> /etc/sudoers.d/pkgmake-yum \
+	&& echo "${user} ALL=NOPASSWD:/usr/bin/yum-builddep *" >> /etc/sudoers.d/pkgmake-yum \
+	&& echo "${user} ALL=NOPASSWD:/usr/bin/yum *" >> /etc/sudoers.d/pkgmake-yum
 
 # Prepare locales
 ARG locale="en_US.UTF-8"
