@@ -35,7 +35,7 @@ pre:
 		|| { echo "failed (see "$(LOG_FILE)")"; exit 1; };
 	echo "ok"
 
-src: RPM_SPEC	?= specs/main.in
+src: RPM_SPEC	?= rpm/spec.in
 src: REMOTE_SOURCES	?= $(shell sed -n -r -e "s/^\s*Source[0-9]*:\s*(https?|ftp)(:.+)/\1\2/ p" $(RPM_SPEC) | $(rpm_sedsubs))
 src: LOCAL_SOURCES	?= $(wildcard src/*)
 src:
@@ -55,8 +55,8 @@ src:
 	)
 	echo "ok";
 
-specs: RPM_SPEC		?= specs/main.in
-specs: RPM_CHANGELOG	?= specs/changelog
+specs: RPM_SPEC		?= rpm/spec.in
+specs: RPM_CHANGELOG	?= rpm/changelog
 specs:
 	echo `date` - specs >> "$(LOG_FILE)"
 	echo -n "Preparing changelog for the template spec file... ";
@@ -70,7 +70,11 @@ specs:
 dep: specs
 	echo `date` - dep >> "$(LOG_FILE)"
 	echo -n "Installing required build dependencies... ";
+	# Disabling inclusions since yum-builddep does not always support '--define "_topdir xxx"'
+	sed -r -i -e 's/^(%include .*)$$/#\1/' "$(RPM_BUILD_DIR)/SPECS/$(RPM_NAME)-$(RPM_VERSION).spec"
 	sudo yum-builddep -y "$(RPM_BUILD_DIR)/SPECS/$(RPM_NAME)-$(RPM_VERSION).spec" >> "$(LOG_FILE)" 2>&1 || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
+	# Re-enabling inclusions after yum-builddep
+	sed -r -i -e 's/^#(%include .*)$$/\1/' "$(RPM_BUILD_DIR)/SPECS/$(RPM_NAME)-$(RPM_VERSION).spec"
 	echo "ok";
 
 rpm:
@@ -81,8 +85,8 @@ rpm:
 post:
 	echo `date` - post >> "$(LOG_FILE)"
 	echo -n "Collecting RPMS from build to dists directory... ";
-	mv -vf "$(RPM_BUILD_DIR)/RPMS/*/$(RPM_NAME)*-$(RPM_VERSION)-*.rpm" "$(RPM_DISTS_DIR)/" >> "$(LOG_FILE)" 2>&1 || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
-	#mv -vf "$(RPM_BUILD_DIR)/SRPMS/$(RPM_NAME)*-$(RPM_VERSION)-*.rpm"  "$(RPM_DISTS_DIR)/" >> "$(LOG_FILE)" 2>&1 || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
+	mv -vf "$(RPM_BUILD_DIR)"/RPMS/*/$(RPM_NAME)*-$(RPM_VERSION)-*.rpm "$(RPM_DISTS_DIR)/" >> "$(LOG_FILE)" 2>&1 || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
+	#mv -vf "$(RPM_BUILD_DIR)"/SRPMS/$(RPM_NAME)*-$(RPM_VERSION)-*.rpm  "$(RPM_DISTS_DIR)/" >> "$(LOG_FILE)" 2>&1 || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
 	echo "ok";
 
 purge: clean
