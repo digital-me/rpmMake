@@ -121,6 +121,7 @@ RPM_DISTS_DIR=\$(pwd)/${env.TARGET_DIR}/dists/${env.LAZY_LABEL} \
 LOG_FILE=/dev/stdout
 """
 			)
+			sh("sudo yum -y install \$(pwd)/${env.TARGET_DIR}/dists/${env.LAZY_LABEL}/*.rpm")
 		},
 		in: '*', on: 'docker',
 	]
