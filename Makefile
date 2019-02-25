@@ -3,6 +3,8 @@ MAKEFLAGS += --silent
 RPM_NAME	?= default
 RPM_RELEASE	?= 0.1
 RPM_ARCH	?= $(shell arch)
+RPM_SPEC	?= rpm/spec.in
+RPM_CHANGELOG	?= rpm/changelog
 RPM_PACKAGER	?= $(shell getent passwd `whoami` | cut -d ':' -f 5) <$(shell whoami)@$(shell hostname -f)>
 RPM_TARGET_DIR	?= $(abspath target)
 RPM_BUILD_DIR	?= $(RPM_TARGET_DIR)/build
@@ -10,15 +12,36 @@ RPM_DISTS_DIR	?= $(RPM_TARGET_DIR)/dists
 RPM_WORKS_DIR	?= $(RPM_TARGET_DIR)/works
 LOG_FILE	?= $(RPM_NAME).log
 
+rpm_sedsrcs = sed -n -r -e "s/^\s*Source[0-9]*:\s*(https?|ftp)(:.+)/\1\2/ p"
 rpm_sedsubs	= sed -e "s/\#RPM_NAME\#/$(RPM_NAME)/g"
 rpm_sedsubs	+=    -e "s/\#RPM_VERSION\#/$(RPM_VERSION)/g"
 rpm_sedsubs	+=    -e "s/\#RPM_RELEASE\#/$(RPM_RELEASE)/g"
 rpm_sedsubs	+=    -e "s/\#RPM_ARCH\#/$(RPM_ARCH)/g"
 rpm_sedsubs	+=    -e "s/\#RPM_PACKAGER\#/$(RPM_PACKAGER)/g"
 
-.PHONY: all pre src specs dep rpm post
+.PHONY: all check pre src specs dep rpm post
 
 all: pre src specs dep rpm post
+
+check: REMOTE_SOURCES	?= $(shell $(rpm_sedsrcs) $(RPM_SPEC) | $(rpm_sedsubs))
+check:
+	ret=0
+	echo -n "Spec file ($(RPM_SPEC))... "
+	test -f $(RPM_SPEC) && echo "present" \
+	|| { echo "missing"; ret=1; };
+	echo -n "Changelog file ($(RPM_CHANGELOG))... "
+	test -f $(RPM_SPEC) && echo "present" \
+	|| { echo "missing"; ret=1; };
+	$(foreach SOURCE,$(REMOTE_SOURCES), \
+		echo -n "Source file ($(notdir $(SOURCE)))... "; \
+		test -f "$(RPM_BUILD_DIR)/SOURCES/$(notdir $(SOURCE))" \
+		&& echo "present" \
+		|| { echo "remote"; \
+			wget --spider "$(SOURCE)" \
+			|| ret=1; \
+		} \
+	)
+	exit $(ret)
 
 pre:
 	# Empty log file first
@@ -35,13 +58,11 @@ pre:
 		|| { echo "failed (see "$(LOG_FILE)")"; exit 1; };
 	echo "ok"
 
-src: RPM_SPEC	?= rpm/spec.in
-src: REMOTE_SOURCES	?= $(shell sed -n -r -e "s/^\s*Source[0-9]*:\s*(https?|ftp)(:.+)/\1\2/ p" $(RPM_SPEC) | $(rpm_sedsubs))
+src: REMOTE_SOURCES	?= $(shell $(rpm_sedsrcs) $(RPM_SPEC) | $(rpm_sedsubs))
 src: LOCAL_SOURCES	?= $(wildcard src/*)
-src:
+src: specs
 	echo `date` - src >> "$(LOG_FILE)"
 	echo -n "Downloading remotes sources if needed... ";
-	test -f $(RPM_SPEC) || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
 	$(foreach SOURCE,$(REMOTE_SOURCES), test -f "$(RPM_BUILD_DIR)/SOURCES/$(notdir $(SOURCE))" \
 		|| wget --no-verbose --append-output="$(LOG_FILE)" --directory-prefix="$(RPM_BUILD_DIR)/SOURCES" "$(SOURCE)" 2>> "$(LOG_FILE)" \
 		|| { echo "failed for $(SOURCE) (see "$(LOG_FILE)")"; exit 1;}; \
