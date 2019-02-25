@@ -1,0 +1,54 @@
+%define name #RPM_NAME#
+%define version #RPM_VERSION#
+%define release #RPM_RELEASE#
+ 
+Summary: RPM Maker
+Name: %{name}
+Version: %{version}
+Release: %{release}%{?dist}
+License: GNU GPL
+URL: http://www.phplist.org
+Group: application/internet
+#Source: https://github.com/digital-me/rpmMake/archive/#RPM_VERSION#.tar.gz
+Source: https://github.com/digital-me/rpmMake/archive/devel_bird.tar.gz
+Packager: #RPM_PACKAGER#
+BuildArch: noarch
+BuildRoot: %{_tmppath}/%{name}-%{version}-root
+ 
+Requires: make
+Requires: sudo
+Requires: yum-utils
+Requires: rpm-build
+ 
+%description
+rpmMake is a Makefile to help building RPM from (remote) source(s).
+
+
+%prep
+%setup
+ 
+%build
+# empty build
+ 
+%install
+ 
+%{__rm} -rf %{buildroot}
+%{__mkdir} -p %{buildroot}/%{_libdir}/%{name}
+%{__cp} Makefile %{buildroot}/%{_libdir}/%{name}
+ 
+ 
+%clean
+rm -rf %{buildroot}
+
+%post
+
+%postun
+
+
+%files
+%defattr(-,root,root)
+%{_libdir}/%{name}
+ 
+ 
+%changelog
+%include %{_specdir}/changelog
