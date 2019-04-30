@@ -10,6 +10,7 @@ RPM_TARGET_DIR	?= $(abspath target)
 RPM_BUILD_DIR	?= $(RPM_TARGET_DIR)/build
 RPM_DISTS_DIR	?= $(RPM_TARGET_DIR)/dists
 RPM_WORKS_DIR	?= $(RPM_TARGET_DIR)/works
+RPM_DEBUGINFO	?= 1
 LOG_FILE	?= $(RPM_NAME).log
 
 rpm_sedsrcs = sed -n -r -e "s/^\s*Source[0-9]*:\s*(https?|ftp)(:.+)/\1\2/ p"
@@ -91,6 +92,7 @@ dep: specs
 	echo -n "Installing required build dependencies... ";
 	# Disabling inclusions since yum-builddep does not always support '--define "_topdir xxx"'
 	sed -r -i -e 's/^(%include .*)$$/#\1/' "$(RPM_BUILD_DIR)/SPECS/$(RPM_NAME)-$(RPM_VERSION).spec"
+	sudo yum clean all >> "$(LOG_FILE)" 2>&1
 	sudo yum-builddep -y "$(RPM_BUILD_DIR)/SPECS/$(RPM_NAME)-$(RPM_VERSION).spec" >> "$(LOG_FILE)" 2>&1 || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
 	# Re-enabling inclusions after yum-builddep
 	sed -r -i -e 's/^#(%include .*)$$/\1/' "$(RPM_BUILD_DIR)/SPECS/$(RPM_NAME)-$(RPM_VERSION).spec"
@@ -98,7 +100,9 @@ dep: specs
 
 rpm:
 	echo `date` - rpm >> "$(LOG_FILE)"
-	rpmbuild --verbose --define="_topdir $(RPM_BUILD_DIR)" \
+	rpmbuild --verbose \
+		--define="_topdir $(RPM_BUILD_DIR)" \
+		--define="debug_package %{nil}" \
 		-bb "$(RPM_BUILD_DIR)/SPECS/$(RPM_NAME)-$(RPM_VERSION).spec";
 
 post:
