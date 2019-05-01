@@ -109,7 +109,7 @@ post:
 	echo `date` - post >> "$(LOG_FILE)"
 	echo -n "Collecting RPMS from build to dists directory... ";
 	mv -vf "$(RPM_BUILD_DIR)"/RPMS/*/$(RPM_NAME)*-$(RPM_VERSION)-*.rpm "$(RPM_DISTS_DIR)/" >> "$(LOG_FILE)" 2>&1 || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
-	#mv -vf "$(RPM_BUILD_DIR)"/SRPMS/$(RPM_NAME)*-$(RPM_VERSION)-*.rpm  "$(RPM_DISTS_DIR)/" >> "$(LOG_FILE)" 2>&1 || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
+	#mv -vf "$(RPM_BUILD_DIR)"/SRPMS/$(RPM_NAME)*-$(RPM_VERSION)-*.rpm "$(RPM_DISTS_DIR)/" >> "$(LOG_FILE)" 2>&1 || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
 	echo "ok";
 
 purge: clean
