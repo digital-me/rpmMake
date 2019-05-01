@@ -60,6 +60,7 @@ RUN groupadd -g ${gid} ${group} \
 	&& echo -n "Defaults:${user} " > /etc/sudoers.d/pkgmake-yum \
 	&& echo '!requiretty' >> /etc/sudoers.d/pkgmake-yum \
 	&& echo "${user} ALL=NOPASSWD:/usr/bin/yum-builddep *" >> /etc/sudoers.d/pkgmake-yum \
+	&& echo "${user} ALL=NOPASSWD:/usr/bin/yum-config-manager *" >> /etc/sudoers.d/pkgmake-yum \
 	&& echo "${user} ALL=NOPASSWD:/usr/bin/yum *" >> /etc/sudoers.d/pkgmake-yum
 
 # Prepare locales
