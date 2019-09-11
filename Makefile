@@ -20,9 +20,9 @@ rpm_sedsubs	+=    -e "s/\#RPM_RELEASE\#/$(RPM_RELEASE)/g"
 rpm_sedsubs	+=    -e "s/\#RPM_ARCH\#/$(RPM_ARCH)/g"
 rpm_sedsubs	+=    -e "s/\#RPM_PACKAGER\#/$(RPM_PACKAGER)/g"
 
-.PHONY: all check pre src specs dep rpm post
+.PHONY: all check pre src specs dep build post
 
-all: pre src specs dep rpm post
+all: pre src specs dep build post
 
 check: REMOTE_SOURCES	?= $(shell $(rpm_sedsrcs) $(RPM_SPEC) | $(rpm_sedsubs))
 check:
@@ -99,7 +99,7 @@ dep: specs
 	sed -r -i -e 's/^#(%include .*)$$/\1/' "$(RPM_BUILD_DIR)/SPECS/$(RPM_NAME)-$(RPM_VERSION).spec"
 	echo "ok";
 
-rpm:
+build:
 	echo `date` - rpm >> "$(LOG_FILE)"
 	rpmbuild --verbose \
 		--define="_topdir $(RPM_BUILD_DIR)" \
