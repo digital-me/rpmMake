@@ -22,11 +22,12 @@ FROM centos:centos7.6.1810
 
 # Import required GPG keys
 RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 \
-	&& rpm --import http://download.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
+	&& rpm --import http://download.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 \
+	&& rpm --import http://www.centos.org/keys/RPM-GPG-KEY-CentOS-SIG-SCLo
 
-# Enable epel repo and Install all current updates
+# Enable epel and scl repos and install all current updates
 RUN yum -q -y update \
-	&& yum -y install epel-release \
+	&& yum -y install epel-release centos-release-scl \
 	&& yum -y upgrade \
 	&& yum -q clean all
 
