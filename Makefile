@@ -6,6 +6,7 @@ RPM_ARCH	?= $(shell arch)
 RPM_SPEC	?= rpm/spec.in
 RPM_CHANGELOG	?= rpm/changelog
 RPM_PACKAGER	?= $(shell getent passwd `whoami` | cut -d ':' -f 5) <$(shell whoami)@$(shell hostname -f)>
+RPM_VENDOR	?= nobody
 RPM_TARGET_DIR	?= $(abspath target)
 RPM_BUILD_DIR	?= $(RPM_TARGET_DIR)/build
 RPM_DISTS_DIR	?= $(RPM_TARGET_DIR)/dists
@@ -19,6 +20,7 @@ rpm_sedsubs	+=    -e "s/\#RPM_VERSION\#/$(RPM_VERSION)/g"
 rpm_sedsubs	+=    -e "s/\#RPM_RELEASE\#/$(RPM_RELEASE)/g"
 rpm_sedsubs	+=    -e "s/\#RPM_ARCH\#/$(RPM_ARCH)/g"
 rpm_sedsubs	+=    -e "s/\#RPM_PACKAGER\#/$(RPM_PACKAGER)/g"
+rpm_sedsubs	+=    -e "s/\#RPM_PACKAGER\#/$(RPM_VENDOR)/g"
 
 .PHONY: rpm rpm_check rpm_pre rpm_src rpm_specs rpm_dep rpm_build rpm_post
 
