@@ -22,9 +22,9 @@ rpm_sedsubs	+=    -e "s/\#RPM_ARCH\#/$(RPM_ARCH)/g"
 rpm_sedsubs	+=    -e "s/\#RPM_PACKAGER\#/$(RPM_PACKAGER)/g"
 rpm_sedsubs	+=    -e "s/\#RPM_PACKAGER\#/$(RPM_VENDOR)/g"
 
-.PHONY: rpm rpm_check rpm_pre rpm_src rpm_specs rpm_dep rpm_build rpm_post
+.PHONY: rpm rpm_check rpm_pre rpm_src rpm_specs rpm_deps rpm_build rpm_post
 
-rpm: rpm_pre rpm_src rpm_specs rpm_dep rpm_build rpm_post
+rpm: rpm_pre rpm_src rpm_specs rpm_deps rpm_build rpm_post
 
 rpm_check: REMOTE_SOURCES	?= $(shell $(rpm_sedsrcs) $(RPM_SPEC) | $(rpm_sedsubs))
 rpm_check:
@@ -78,35 +78,49 @@ rpm_src: rpm_specs
 	)
 	echo "ok";
 
-rpm_specs: RPM_SPEC		?= rpm/spec.in
+rpm_specs: RPM_SPECS		?= $(wildcard rpm/*spec.in)
 rpm_specs: RPM_CHANGELOG	?= rpm/changelog
 rpm_specs:
 	echo `date` - rpm_specs >> "$(LOG_FILE)"
 	echo -n "RPM - Preparing changelog for the template spec file... ";
-	test -f "$(RPM_SPEC)" -a -f "$(RPM_CHANGELOG)" || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
+	test -f "$(word 1,$(RPM_SPECS))" -a -f "$(RPM_CHANGELOG)" || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
 	cat "$(RPM_CHANGELOG)" > "$(RPM_BUILD_DIR)/SPECS/changelog" 2>> "$(LOG_FILE)" || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
 	echo "ok";
 	echo -n "RPM - Generating the spec file from template... ";
-	cat "$(RPM_SPEC)" | $(rpm_sedsubs) > "$(RPM_BUILD_DIR)/SPECS/$(RPM_NAME)-$(RPM_VERSION).spec" 2>> "$(LOG_FILE)" || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
+	$(foreach RPM_SPEC,$(RPM_SPECS), \
+		cat "$(RPM_SPEC)" | $(rpm_sedsubs) \
+		> "$(RPM_BUILD_DIR)/SPECS/$(RPM_NAME)-$(subst .,-,$(patsubst rpm/%spec.in,%,$(RPM_SPEC)))$(RPM_VERSION).spec" \
+		2>> "$(LOG_FILE)" || { echo "failed (see "$(LOG_FILE)")"; exit 1; }; \
+	)
 	echo "ok";
 
-rpm_dep: rpm_specs
-	echo `date` - rpm_dep >> "$(LOG_FILE)"
+rpm_deps: RPM_SPECS		?= $(wildcard $(RPM_BUILD_DIR)/SPECS/*.spec)
+rpm_deps: rpm_specs
+	echo `date` - rpm_deps >> "$(LOG_FILE)"
 	echo -n "RPM - Installing required build dependencies... ";
+	#sudo yum clean all >> "$(LOG_FILE)" 2>&1
 	# Disabling inclusions since yum-builddep does not always support '--define "_topdir xxx"'
-	sed -r -i -e 's/^(%include .*)$$/#\1/' "$(RPM_BUILD_DIR)/SPECS/$(RPM_NAME)-$(RPM_VERSION).spec"
-	sudo yum clean all >> "$(LOG_FILE)" 2>&1
-	sudo yum-builddep -y "$(RPM_BUILD_DIR)/SPECS/$(RPM_NAME)-$(RPM_VERSION).spec" >> "$(LOG_FILE)" 2>&1 || { echo "failed (see "$(LOG_FILE)")"; exit 1; };
+	sed -r -i -e 's/^(%include .*)$$/#\1/' $(foreach RPM_SPEC,$(RPM_SPECS), "$(RPM_SPEC)");
+	$(foreach RPM_SPEC,$(RPM_SPECS), \
+		sudo yum-builddep -y "$(RPM_SPEC)" >> "$(LOG_FILE)" 2>&1 || { echo "failed (see "$(LOG_FILE)")"; exit 1; }; \
+		>> "$(LOG_FILE)" 2>&1 || { echo "failed (see "$(LOG_FILE)")"; exit 1; }; \
+	)
 	# Re-enabling inclusions after yum-builddep
-	sed -r -i -e 's/^#(%include .*)$$/\1/' "$(RPM_BUILD_DIR)/SPECS/$(RPM_NAME)-$(RPM_VERSION).spec"
+	sed -r -i -e 's/^#(%include .*)$$/\1/' $(foreach RPM_SPEC,$(RPM_SPECS), "$(RPM_SPEC)");
 	echo "ok";
 
+rpm_build: RPM_SPECS		?= $(wildcard $(RPM_BUILD_DIR)/SPECS/*.spec)
 rpm_build:
 	echo `date` - rpm_build >> "$(LOG_FILE)"
-	rpmbuild --verbose \
-		--define="_topdir $(RPM_BUILD_DIR)" \
-		--define="debug_package %{nil}" \
-		-bb "$(RPM_BUILD_DIR)/SPECS/$(RPM_NAME)-$(RPM_VERSION).spec";
+	echo -n "RPM - Building package(s)... ";
+	$(foreach RPM_SPEC,$(RPM_SPECS), \
+		rpmbuild --verbose \
+			--define="_topdir $(RPM_BUILD_DIR)" \
+			--define="debug_package %{nil}" \
+			-bb "$(RPM_SPEC)" \
+		>> "$(LOG_FILE)" 2>&1 || { echo "failed (see "$(LOG_FILE)")"; exit 1; }; \
+	)
+	echo "ok";
 
 rpm_post:
 	echo `date` - rpm_post >> "$(LOG_FILE)"
