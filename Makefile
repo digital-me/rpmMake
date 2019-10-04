@@ -78,7 +78,7 @@ rpm_src: rpm_specs
 	)
 	echo "ok";
 
-rpm_specs: RPM_SPECS		?= $(wildcard rpm/*spec.in)
+rpm_specs: RPM_SPECS	?= $(wildcard rpm/*spec.in)
 rpm_specs: RPM_CHANGELOG	?= rpm/changelog
 rpm_specs:
 	echo `date` - rpm_specs >> "$(LOG_FILE)"
@@ -94,7 +94,7 @@ rpm_specs:
 	)
 	echo "ok";
 
-rpm_deps: RPM_SPECS		?= $(wildcard $(RPM_BUILD_DIR)/SPECS/*.spec)
+rpm_deps: RPM_SPECS		?= $(wildcard $(RPM_BUILD_DIR)/SPECS/*-$(RPM_VERSION).spec)
 rpm_deps: rpm_specs
 	echo `date` - rpm_deps >> "$(LOG_FILE)"
 	echo -n "RPM - Installing required build dependencies... ";
@@ -109,7 +109,7 @@ rpm_deps: rpm_specs
 	sed -r -i -e 's/^#(%include .*)$$/\1/' $(foreach RPM_SPEC,$(RPM_SPECS), "$(RPM_SPEC)");
 	echo "ok";
 
-rpm_build: RPM_SPECS		?= $(wildcard $(RPM_BUILD_DIR)/SPECS/*.spec)
+rpm_build: RPM_SPECS		?= $(wildcard $(RPM_BUILD_DIR)/SPECS/*-$(RPM_VERSION).spec)
 rpm_build:
 	echo `date` - rpm_build >> "$(LOG_FILE)"
 	echo -n "RPM - Building package(s)... ";
