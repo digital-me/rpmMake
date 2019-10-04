@@ -78,7 +78,7 @@ rpm_src: rpm_specs
 	)
 	echo "ok";
 
-rpm_specs: RPM_SPECS	?= $(wildcard rpm/*.spec.in)
+rpm_specs: RPM_SPECS	?= $(wildcard rpm/*spec.in)
 rpm_specs: RPM_CHANGELOG	?= rpm/changelog
 rpm_specs:
 	echo `date` - rpm_specs >> "$(LOG_FILE)"
