@@ -30,10 +30,12 @@ rpm_check: RPM_SPECS		?= $(RPM_SPECS_IN)
 rpm_check: REMOTE_SOURCES	?= $(shell $(rpm_sedsrcs) $(RPM_SPECS) | $(rpm_sedsubs))
 rpm_check:
 	echo -n "RPM - Spec file ($(RPM_SPECS))... "
-	test -f $(RPM_SPECS) && echo "present" \
+	{ $(foreach RPM_SPEC,$(RPM_SPECS), \
+		test -f "$(RPM_SPEC)"; \
+	)} && echo "present" \
 	|| { echo "missing"; exit 1; };
 	echo -n "RPM - Changelog file ($(RPM_CHANGELOG))... "
-	test -f $(RPM_SPECS) && echo "present" \
+	test -f "$(RPM_CHANGELOG)" && echo "present" \
 	|| { echo "missing"; exit 1; };
 	$(foreach SOURCE,$(REMOTE_SOURCES), \
 		echo -n "RPM - Source file ($(notdir $(SOURCE)))... "; \
@@ -42,7 +44,7 @@ rpm_check:
 		|| { echo "remote"; \
 			wget --spider "$(SOURCE)" \
 			|| exit 1; \
-		} \
+		}; \
 	)
 
 rpm_pre:
