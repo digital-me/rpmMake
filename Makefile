@@ -3,7 +3,7 @@ MAKEFLAGS += --silent
 RPM_NAME	?= default
 RPM_RELEASE	?= 0.1
 RPM_ARCH	?= $(shell arch)
-RPM_SPEC	?= rpm/spec.in
+RPM_SPECS_IN	?= $(wildcard rpm/*spec.in)
 RPM_CHANGELOG	?= rpm/changelog
 RPM_PACKAGER	?= $(shell getent passwd `whoami` | cut -d ':' -f 5) <$(shell whoami)@$(shell hostname -f)>
 RPM_VENDOR	?= nobody
@@ -11,7 +11,7 @@ RPM_TARGET_DIR	?= $(abspath target)
 RPM_BUILD_DIR	?= $(RPM_TARGET_DIR)/build
 RPM_DISTS_DIR	?= $(RPM_TARGET_DIR)/dists
 RPM_WORKS_DIR	?= $(RPM_TARGET_DIR)/works
-RPM_DEBUGINFO	?= 1
+RPM_DEBUGINFO	?= 0
 LOG_FILE	?= $(RPM_NAME).log
 
 rpm_sedsrcs = sed -n -r -e "s/^\s*Source[0-9]*:\s*(https?|ftp)(:.+)/\1\2/ p"
@@ -26,13 +26,14 @@ rpm_sedsubs	+=    -e "s/\#RPM_PACKAGER\#/$(RPM_VENDOR)/g"
 
 rpm: rpm_pre rpm_src rpm_specs rpm_deps rpm_build rpm_post
 
-rpm_check: REMOTE_SOURCES	?= $(shell $(rpm_sedsrcs) $(RPM_SPEC) | $(rpm_sedsubs))
+rpm_check: RPM_SPECS		?= $(RPM_SPECS_IN)
+rpm_check: REMOTE_SOURCES	?= $(shell $(rpm_sedsrcs) $(RPM_SPECS) | $(rpm_sedsubs))
 rpm_check:
-	echo -n "RPM - Spec file ($(RPM_SPEC))... "
-	test -f $(RPM_SPEC) && echo "present" \
+	echo -n "RPM - Spec file ($(RPM_SPECS))... "
+	test -f $(RPM_SPECS) && echo "present" \
 	|| { echo "missing"; exit 1; };
 	echo -n "RPM - Changelog file ($(RPM_CHANGELOG))... "
-	test -f $(RPM_SPEC) && echo "present" \
+	test -f $(RPM_SPECS) && echo "present" \
 	|| { echo "missing"; exit 1; };
 	$(foreach SOURCE,$(REMOTE_SOURCES), \
 		echo -n "RPM - Source file ($(notdir $(SOURCE)))... "; \
@@ -60,7 +61,8 @@ rpm_pre:
 		|| { echo "failed (see "$(LOG_FILE)")"; exit 1; };
 	echo "ok"
 
-rpm_src: REMOTE_SOURCES	?= $(shell $(rpm_sedsrcs) $(RPM_SPEC) | $(rpm_sedsubs))
+rpm_src: RPM_SPECS		?= $(RPM_SPECS_IN)
+rpm_src: REMOTE_SOURCES	?= $(shell $(rpm_sedsrcs) $(RPM_SPECS) | $(rpm_sedsubs))
 rpm_src: LOCAL_SOURCES	?= $(wildcard src/*)
 rpm_src: rpm_specs
 	echo `date` - rpm_src >> "$(LOG_FILE)"
@@ -78,7 +80,7 @@ rpm_src: rpm_specs
 	)
 	echo "ok";
 
-rpm_specs: RPM_SPECS	?= $(wildcard rpm/*spec.in)
+rpm_specs: RPM_SPECS		?= $(RPM_SPECS_IN)
 rpm_specs: RPM_CHANGELOG	?= rpm/changelog
 rpm_specs:
 	echo `date` - rpm_specs >> "$(LOG_FILE)"
