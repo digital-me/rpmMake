@@ -71,3 +71,6 @@ ENV LC_ALL "${locale}"
 
 # Define (unused) arguments (to avoid warning) 
 ARG dir=.
+
+# Switch to non-root user
+USER ${user}
