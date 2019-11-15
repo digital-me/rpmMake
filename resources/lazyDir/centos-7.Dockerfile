@@ -18,7 +18,7 @@
 #
 
 # Pull base image from official repo
-FROM centos:centos7.6.1810
+FROM centos:centos7.7.1908
 
 # Import required GPG keys
 RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 \
