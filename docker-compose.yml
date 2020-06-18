@@ -1,0 +1,54 @@
+version: '3'
+services:
+  centos7:
+    build: 
+      context: rpmMake/resources/lazyDir
+      dockerfile: centos7.Dockerfile
+      args:
+        uid: "${_UID:-1000}"
+        gid: "${_GID:-1000}"
+    volumes:
+      - .:/var/tmp/pkgmake
+    working_dir: /var/tmp/pkgmake
+    stdin_open: true
+    tty: true
+    hostname: build.local
+    container_name: build.local
+    command: bash
+    networks:
+      - bridge
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 256M
+    environment:
+      - LAZY_LABEL=centos7
+  centos6:
+    build: 
+      context: rpmMake/resources/lazyDir
+      dockerfile: centos6.Dockerfile
+      args:
+        uid: "${_UID:-1000}"
+        gid: "${_GID:-1000}"
+    volumes:
+      - .:/var/tmp/pkgmake
+    working_dir: /var/tmp/pkgmake
+    stdin_open: true
+    tty: true
+    hostname: build.local
+    container_name: build.local
+    command: bash
+    networks:
+      - bridge
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 256M
+    environment:
+      - LAZY_LABEL=centos6
+
+networks:
+  bridge:
+    external: true
