@@ -55,12 +55,12 @@ RUN yum -q clean expire-cache && \
 RUN yum -q clean expire-cache && \
     yum -q makecache && \
     yum -y install --setopt=tsflags=nodocs \
-	  make \
-	  rpm-build \
-	  sudo \
-	  yum-utils \
-	&& \
-	yum -q -y clean all --enablerepo='*'
+	    make \
+	    rpm-build \
+	    sudo \
+	    yum-utils \
+	  && \
+	  yum -q -y clean all --enablerepo='*'
 
 # Parameters for default user:group
 ARG uid=999

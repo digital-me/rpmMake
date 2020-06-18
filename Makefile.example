@@ -19,3 +19,5 @@ include rpmMake/Makefile
 
 all: rpm
 check: rpm_check
+
+# It is possible to add any new section as long as they are not prefixed with `rpm_`

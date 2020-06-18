@@ -55,12 +55,12 @@ RUN yum -q clean expire-cache && \
 RUN yum -q clean expire-cache && \
     yum -q makecache && \
     yum -y install --setopt=tsflags=nodocs \
-	  make \
-	  rpm-build \
-	  sudo \
-	  yum-utils \
-	&& \
-	yum -q -y clean all --enablerepo='*'
+	    make \
+	    rpm-build \
+	    sudo \
+	    yum-utils \
+	  && \
+	  yum -q -y clean all --enablerepo='*'
 
 # Parameters for default user:group
 ARG uid=999
@@ -69,13 +69,13 @@ ARG gid=999
 ARG group=pkgmake
 
 # Create and allow user to install build deps
-RUN groupadd -g ${gid} ${group} \
-	&& useradd -g ${gid} -u ${uid} -d /var/lib/pkgmake ${user} \
-	&& echo -n "Defaults:${user} " > /etc/sudoers.d/pkgmake-yum \
-	&& echo '!requiretty' >> /etc/sudoers.d/pkgmake-yum \
-	&& echo "${user} ALL=NOPASSWD:/usr/bin/yum-builddep *" >> /etc/sudoers.d/pkgmake-yum \
-	&& echo "${user} ALL=NOPASSWD:/usr/bin/yum-config-manager *" >> /etc/sudoers.d/pkgmake-yum \
-	&& echo "${user} ALL=NOPASSWD:/usr/bin/yum *" >> /etc/sudoers.d/pkgmake-yum
+RUN groupadd -g ${gid} ${group} && \
+	  useradd -g ${gid} -u ${uid} -d /var/lib/pkgmake ${user} && \
+	  echo -n "Defaults:${user} " > /etc/sudoers.d/pkgmake-yum && \
+	  echo '!requiretty' >> /etc/sudoers.d/pkgmake-yum && \
+	  echo "${user} ALL=NOPASSWD:/usr/bin/yum-builddep *" >> /etc/sudoers.d/pkgmake-yum && \
+	  echo "${user} ALL=NOPASSWD:/usr/bin/yum-config-manager *" >> /etc/sudoers.d/pkgmake-yum && \
+	  echo "${user} ALL=NOPASSWD:/usr/bin/yum *" >> /etc/sudoers.d/pkgmake-yum
 
 # Prepare locales
 ARG locale="en_US.UTF-8"
