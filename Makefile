@@ -42,7 +42,7 @@ rpm_check:
 		test -f "$(RPM_BUILD_DIR)/SOURCES/$(notdir $(SOURCE))" \
 		&& echo "present" \
 		|| { echo "remote"; \
-			wget --spider "$(SOURCE)" \
+			curl --location --silent --show-error --output "$(RPM_BUILD_DIR)/SOURCES/$(notdir $(SOURCE))" --url "$(SOURCE)" \
 			|| exit 1; \
 		}; \
 	)
