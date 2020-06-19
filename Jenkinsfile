@@ -76,7 +76,7 @@ def releaseBranch = 'stable'
 lazyConfig(
 	name: 		   'rpmmake',
 	env: 		   [
-		RELEASE:    false,
+		RELEASE:    true,
 		DRYRUN:     false,
 		TARGET_DIR: 'target',
 		GIT_CRED:   'bot-ci-dgm-rsa',
