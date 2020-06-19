@@ -42,7 +42,7 @@ rpm_check:
 		test -f "$(RPM_BUILD_DIR)/SOURCES/$(notdir $(SOURCE))" \
 		&& echo "present" \
 		|| { echo "remote"; \
-			curl --location --silent --show-error --output "$(RPM_BUILD_DIR)/SOURCES/$(notdir $(SOURCE))" --url "$(SOURCE)" \
+			curl --silent --show-error --head --location --url "$(SOURCE)" --output /dev/null \
 			|| exit 1; \
 		}; \
 	)
@@ -70,7 +70,7 @@ rpm_src: rpm_specs
 	echo `date` - rpm_src >> "$(LOG_FILE)"
 	echo -n "RPM - Downloading remotes sources if needed... ";
 	$(foreach SOURCE,$(REMOTE_SOURCES), test -f "$(RPM_BUILD_DIR)/SOURCES/$(notdir $(SOURCE))" \
-		|| wget --no-verbose --append-output="$(LOG_FILE)" --directory-prefix="$(RPM_BUILD_DIR)/SOURCES" "$(SOURCE)" 2>> "$(LOG_FILE)" \
+		|| curl --location --url "$(SOURCE)" --output "$(RPM_BUILD_DIR)/SOURCES/$(notdir $(SOURCE))" 2>> "$(LOG_FILE)" \
 		|| { echo "failed for $(SOURCE) (see "$(LOG_FILE)")"; exit 1;}; \
 	)
 	echo "ok";
