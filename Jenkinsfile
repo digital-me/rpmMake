@@ -112,7 +112,7 @@ lazyStage {
 			version = version - ~/-\d+/
 			sh(
 """
-DIST=\"\${LAZY_LABEL%%-*}\${LAZY_LABEL##*-}-\$(arch)\"
+DIST=\"\${LAZY_LABEL}-\$(arch)\"
 make \
 RPM_NAME='rpmMake' \
 RPM_VERSION=${version} \
@@ -122,7 +122,13 @@ RPM_DISTS_DIR=\$(pwd)/${env.TARGET_DIR}/dists/\${DIST} \
 LOG_FILE=/dev/stdout
 """
 			)
-			sh("DIST=\"\${LAZY_LABEL%%-*}\${LAZY_LABEL##*-}-\$(arch)\" && sudo yum -y install \$(pwd)/${env.TARGET_DIR}/dists/\${DIST}/*.rpm")
+			sh(
+"""
+DIST=\"\${LAZY_LABEL}-\$(arch)\"
+cd ${env.TARGET_DIR}/dists/\${DIST}
+sudo yum -y install *.rpm
+"""
+			)
 		},
 		in: '*', on: 'docker',
 	]
