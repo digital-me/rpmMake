@@ -70,7 +70,7 @@ rpm_src: rpm_specs
 	echo `date` - rpm_src >> "$(LOG_FILE)"
 	echo -n "RPM - Downloading remotes sources if needed... ";
 	$(foreach SOURCE,$(REMOTE_SOURCES), test -f "$(RPM_BUILD_DIR)/SOURCES/$(notdir $(SOURCE))" \
-		|| curl --location --url "$(SOURCE)" --output "$(RPM_BUILD_DIR)/SOURCES/$(notdir $(SOURCE))" 2>> "$(LOG_FILE)" \
+		|| curl --silent --show-error --location --url "$(SOURCE)" --output "$(RPM_BUILD_DIR)/SOURCES/$(notdir $(SOURCE))" 2>> "$(LOG_FILE)" \
 		|| { echo "failed for $(SOURCE) (see "$(LOG_FILE)")"; exit 1;}; \
 	)
 	echo "ok";
