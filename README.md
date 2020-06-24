@@ -28,6 +28,13 @@ git submodule add --branch stable ssh://git@github.com/digital-me/rpmMake.git rp
 
 - Create a Makefile base on the provided [example](Makefile.example) and change at least the NAME, PACKAGER and VENDOR
 - Copy (or symlink) the Docker [compose](docker-compose.yml) file
+- If the current user id and group id are not 1000, it is required to define them using environment variables:
+
+```
+export _UID="$(id -u)"
+export _GID="$(id -g)"
+```
+
 - Build the container image:
 
 ```
