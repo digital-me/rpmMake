@@ -17,12 +17,16 @@
 #  limitations under the License.
 #
 
+##############################
+# General level requirements #
+##############################
+
 # Pull base image from official repo
-FROM centos:centos7.8.2003
+FROM centos:centos7.9.2009
 
 # Import local GPG keys and enable epel repo
 RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
-    yum -q clean expire-cache && \
+    yum -q clean all && \
     yum -q makecache && \
     yum -y install --setopt=tsflags=nodocs \
       epel-release \
@@ -31,17 +35,28 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
     yum -q -y clean all --enablerepo='*'
 
 # Install common requirements
-RUN yum -q clean expire-cache && \
+RUN INSTALL_PKGS="git unzip wget which" && \
+    yum -q clean expire-cache && \
     yum -q makecache && \
-    yum -y install --setopt=tsflags=nodocs \
-      git \
-      unzip \
-      wget \
-      which \
-    && \
+    yum -y install --setopt=tsflags=nodocs $INSTALL_PKGS && \
+    rpm -V $INSTALL_PKGS && \
     yum -q -y clean all --enablerepo='*'
 
-# Enable Software Collections
+# Prepare locales
+ARG locale=en_US.UTF-8
+ENV LANG "${locale}"
+ENV LC_ALL "${locale}"
+
+# Configure desired timezone
+ENV TZ=Europe/Amsterdam
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone
+
+###############################
+# Enable Software Collections #
+###############################
+
+# Add repos, keys and tools
 RUN yum -q clean expire-cache && \
     yum -q makecache && \
     yum -y install --setopt=tsflags=nodocs \
@@ -51,6 +66,15 @@ RUN yum -q clean expire-cache && \
     rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-SCLo && \
     yum -q -y clean all --enablerepo='*'
 
+# Enable SCLs for any later bash session
+COPY scl_enable.sh /usr/local/bin/scl_enable
+ENV BASH_ENV="/usr/local/bin/scl_enable" \
+    ENV="/usr/local/bin/scl_enable" \
+    PROMPT_COMMAND=". /usr/local/bin/scl_enable"
+
+##################################
+# Application level requirements #
+##################################
 # Install specific requirements
 RUN yum -q clean expire-cache && \
     yum -q makecache && \
@@ -61,6 +85,10 @@ RUN yum -q clean expire-cache && \
       yum-utils \
     && \
     yum -q -y clean all --enablerepo='*'
+
+###########################
+# User level requirements #
+###########################
 
 # Parameters for default user:group
 ARG uid=999
@@ -80,13 +108,13 @@ RUN echo -n "Defaults:${user} " > /etc/sudoers.d/pkgmake-yum && \
     echo "${user} ALL=NOPASSWD:/usr/bin/yum-config-manager *" >> /etc/sudoers.d/pkgmake-yum && \
     echo "${user} ALL=NOPASSWD:/usr/bin/yum *" >> /etc/sudoers.d/pkgmake-yum
 
-# Prepare locales
-ARG locale="en_US.UTF-8"
-ENV LANG "${locale}"
-ENV LC_ALL "${locale}"
+# Switch to non-root user
+USER ${user}
+WORKDIR /home/${user}
+
+# Prepare user variables
+ENV USER ${user}
+ENV HOME=/home/${user}
 
 # Define (unused) arguments (to avoid warning) 
 ARG dir=.
-
-# Switch to non-root user
-USER ${user}
