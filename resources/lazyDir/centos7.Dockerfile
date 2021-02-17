@@ -61,7 +61,7 @@ RUN yum -q clean expire-cache && \
     yum -q makecache && \
     yum -y install --setopt=tsflags=nodocs \
       centos-release-scl \
-      scl-utils-build \
+      scl-utils \
     && \
     rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-SCLo && \
     yum -q -y clean all --enablerepo='*'
@@ -75,6 +75,7 @@ ENV BASH_ENV="/usr/local/bin/scl_enable" \
 ##################################
 # Application level requirements #
 ##################################
+
 # Install specific requirements
 RUN yum -q clean expire-cache && \
     yum -q makecache && \
